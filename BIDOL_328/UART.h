@@ -28,7 +28,7 @@ void UART_printString(char *str) {
 
 void UART_printInteger(int n) {
   while (n > 0) {
-    UART_transmit((n % 10));
+    UART_transmit((n % 10) + '0');
     n /= 10;
   }
 }

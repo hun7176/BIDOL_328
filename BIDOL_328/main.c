@@ -11,6 +11,7 @@ void GPIO_Init(void);                 // GPIO 초기화
 void EXTI_Init(void);                 // 외부 인터럽트 초기화
 int read_ADC(void);                   // ADC 값 읽기
 void write_LED(void);                 // LED 상태 시리얼 전송
+ISR(INT0_vect);                       // 일어남
 ISR(INT1_vect);                       // 정지 버튼 작동
 
 volatile uint16_t led = 0;    // 74595로 전송할 LED 데이터
@@ -23,12 +24,12 @@ volatile int nozzpos = 0; // 현재 노즐 위치 (-2~2), 높은 숫자가 front
 int main(void) {
   volatile int button = 0;
   volatile int prevbt = 0;
-  GPIO_Init();                // GPIO 초기화
-  ADC_Init(ADC_SEAT_THM_PIN); // ADC0 초기화
-  EXTI_Init();                // 외부 인터럽트 초기화
-  TIMER1_Init();              // 서보모터 PWM 초기화
-  UART_Init();                // 디버그용 UART 초기화
-  write_LED();                // LED 초기화
+  GPIO_Init();          // GPIO 초기화
+  ADC_Init(ADC_SW_PIN); // ADC0 초기화
+  EXTI_Init();          // 외부 인터럽트 초기화
+  TIMER1_Init();        // 서보모터 PWM 초기화
+  UART_Init();          // 디버그용 UART 초기화
+  write_LED();          // LED 초기화
 
   waterpres = 3, nozzpos = 0;
   UART_printString("Initialize complete\n");
@@ -122,10 +123,13 @@ int main(void) {
       // 세정 중이 아닐 경우 건조 모드로 변경
       if (state == ST_IDLE)
         state = ST_DRY;
-      // TODO: dry timer start, dry motor start
+
+      DC_PORT |= (1 << DC_PIN);
+      // TODO: dry timer start
 
     } else { // button < 1023 // 8번 버튼: 세정
       // 정지 중이거나 무브 세정 중일 경우 세정 모드로 변경
+      UART_printString("\nwashing\n");
       if (state == ST_IDLE || state == ST_WASH_MOVE)
         state = ST_WASH;
 
@@ -146,11 +150,10 @@ int main(void) {
       // 서보모터 조절(waterpres)
       rotate_servo(waterpres);
       // 스텝모터 조절(nozzpos)
-      UART_printString("WASHING\n");
     }
     // TODO: 변좌온도(seattemp), 온수온도(watertemp) 모니터링해 히터 켜기 / 끄기
     // UART_printString(statestr);
-    UART_printInteger(button);
+    // UART_printInteger(button);
     // _delay_ms(1000);
   } // end while
 }
@@ -193,9 +196,11 @@ void GPIO_Init(void) {
   SERVO_DDR |= (1 << SERVO_PIN);
   STEPPER_STEP_DDR |= (1 << STEPPER_STEP_PIN);
   STEPPER_DIR_DDR |= (1 << STEPPER_DIR_PIN);
+  DC_DDR |= (1 << DC_PIN);
   SERVO_PORT &= ~(1 << SERVO_PIN);
   STEPPER_STEP_PORT &= ~(1 << STEPPER_STEP_PIN);
   STEPPER_DIR_PORT &= ~(1 << STEPPER_DIR_PIN); // LOW = CW
+  DC_PORT &= ~(1 << DC_PIN);
 
   // 인터럽트 버튼
   // TODO: EXTI_Init()로 분리
@@ -225,6 +230,17 @@ void write_LED(void) {
   RCK_PORT &= ~(1 << RCK_PIN);
 }
 
+ISR(INT0_vect) { // 일어남
+  // 노즐 닫기
+  rotate_servo(0);
+
+  // 노즐수납 팬정지
+  DC_PORT &= ~(1 << DC_PIN);
+
+  // 상태 바꾸기
+  state = ST_IDLE;
+  UART_printString("idle\n");
+}
 ISR(INT1_vect) { // 정지 버튼 작동
   // 노즐 닫기
   rotate_servo(0);
@@ -234,13 +250,18 @@ ISR(INT1_vect) { // 정지 버튼 작동
 
   // DC모터 팬 정지하기
   // TODO
+  DC_PORT &= ~(1 << DC_PIN);
 
   // 상태 바꾸기
   state = ST_IDLE;
+  UART_printString("idle\n");
 }
 
-void EXTI_Init(void) {              // 외부 인터럽트 초기화
-  EIMSK |= (1 << INT0 | 1 << INT1); // INT0, INT1 인터럽트 활성화
-  EICRA |= (1 << ISC00);            // 버튼 상태 변화 감지
-  sei();                            // 전역 인터럽트 허용
+void EXTI_Init(void) { // 외부 인터럽트 초기화
+  STOP_BT_DDR &= ~(1 << STOP_BT_PIN);
+  SEAT_SENSOR_DDR &= ~(1 << SEAT_SENSOR_PIN);
+  EIMSK |= (1 << INT0 | 1 << INT1);   // INT0, INT1 인터럽트 활성화
+  EICRA |= (1 << ISC01 | 1 << ISC00); // 버튼 상태 변화 감지
+  EICRA |= (1 << ISC11 | 1 << ISC10); // 버튼 상태 변화 감지
+  sei();                              // 전역 인터럽트 허용
 }

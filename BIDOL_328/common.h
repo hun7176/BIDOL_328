@@ -49,6 +49,9 @@
 #define STEPPER_DIR_PORT PORTD  // PD5: 스테퍼모터 방향
 #define STEPPER_DIR_DDR DDRD    //
 #define STEPPER_DIR_PIN 5       //
+#define DC_PORT PORTD           // PD6: DC모터 가동
+#define DC_DDR DDRD             //
+#define DC_PIN 6                //
 
 // 외부 인터럽트 대응 버튼
 #define SEAT_SENSOR_PORT PORTD // PD2(INT0): 착석 센서
