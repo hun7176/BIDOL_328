@@ -8,8 +8,10 @@
 
 void ADC_Init(unsigned char channel); // ADC 초기화
 void GPIO_Init(void);                 // GPIO 초기화
+void EXTI_Init(void);                 // 외부 인터럽트 초기화
 int read_ADC(void);                   // ADC 값 읽기
 void write_LED(void);                 // LED 상태 시리얼 전송
+ISR(INT1_vect);                       // 정지 버튼 작동
 
 volatile uint16_t led = 0;    // 74595로 전송할 LED 데이터
 volatile int state = ST_IDLE; // 현재 상태
@@ -23,10 +25,13 @@ int main(void) {
   volatile int prevbt = 0;
   GPIO_Init();                // GPIO 초기화
   ADC_Init(ADC_SEAT_THM_PIN); // ADC0 초기화
-  write_LED();
-  INIT_TIMER1();
+  EXTI_Init();                // 외부 인터럽트 초기화
+  TIMER1_Init();              // 서보모터 PWM 초기화
+  UART_Init();                // 디버그용 UART 초기화
+  write_LED();                // LED 초기화
 
   waterpres = 3, nozzpos = 0;
+  UART_printString("Initialize complete\n");
 
   while (1) {
     prevbt = button;
@@ -139,10 +144,14 @@ int main(void) {
     }
     if (state == ST_WASH || state == ST_WASH_MOVE) {
       // 서보모터 조절(waterpres)
+      rotate_servo(waterpres);
       // 스텝모터 조절(nozzpos)
+      UART_printString("WASHING\n");
     }
-    // TODO: 변좌온도(seattemp), 온수온도(watertemp) 모니터링해 히터 켜기/끄기
-
+    // TODO: 변좌온도(seattemp), 온수온도(watertemp) 모니터링해 히터 켜기 / 끄기
+    // UART_printString(statestr);
+    UART_printInteger(button);
+    // _delay_ms(1000);
   } // end while
 }
 
@@ -214,4 +223,24 @@ void write_LED(void) {
   // 래치 클록 신호 생성
   RCK_PORT |= (1 << RCK_PIN);
   RCK_PORT &= ~(1 << RCK_PIN);
+}
+
+ISR(INT1_vect) { // 정지 버튼 작동
+  // 노즐 닫기
+  rotate_servo(0);
+
+  // 노즐 수납하기
+  // TODO
+
+  // DC모터 팬 정지하기
+  // TODO
+
+  // 상태 바꾸기
+  state = ST_IDLE;
+}
+
+void EXTI_Init(void) {              // 외부 인터럽트 초기화
+  EIMSK |= (1 << INT0 | 1 << INT1); // INT0, INT1 인터럽트 활성화
+  EICRA |= (1 << ISC00);            // 버튼 상태 변화 감지
+  sei();                            // 전역 인터럽트 허용
 }
