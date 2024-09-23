@@ -21,6 +21,14 @@ volatile int seattemp = 0;    // 현재 변좌 온도 단계 (0~4)
 volatile int waterpres = 0;   // 현재 수압 단계 (1~5)
 volatile int nozzpos = 0; // 현재 노즐 위치 (-2~2), 높은 숫자가 front
 
+volatile int wtflag = 0; // 수온 변화 플래그
+volatile int stflag = 0; // 변좌 온도 변화 플래그
+volatile int wpflag = 0; // 수압 변화 플래그
+volatile int npflag = 0; // 노즐 위치 변화 플래그
+
+// volatile int dcflag = 0; // dc모터 속도 변화 플래그
+// volatile int svflag = 0; // 서보모터 속도 변화 플래그
+
 int main(void) {
   volatile int button = 0;
   volatile int prevbt = 0;
@@ -41,7 +49,7 @@ int main(void) {
     // ADC 전압 값에 따라 버튼을 구분해 상태 변경
     if (prevbt > 64 || button < 64) { // 이미 처리한 버튼 또는 버튼 안 누름
 
-    } else if (button < 192) { // 1번 버튼: 변좌 온도
+    } else if (button < 192 && !stflag) { // 1번 버튼: 변좌 온도
       // 변좌 온도를 4단계 안에서 순환
       if (seattemp == 3) { // 3단계일 경우 0단계로 초기화
         seattemp = 0;
@@ -54,8 +62,9 @@ int main(void) {
         led |= (1 << LDc3);
         write_LED();
       }
+      stflag = 1;
 
-    } else if (button < 320) { // 2번 버튼: 온수 온도
+    } else if (button < 320 && !wtflag) { // 2번 버튼: 온수 온도
       // 온수 온도를 4단계 안에서 순환
       if (watertemp == 3) { // 3단계일 경우 0단계로 초기화
         watertemp = 0;
@@ -68,15 +77,17 @@ int main(void) {
         led |= (1 << LDb3);
         write_LED();
       }
+      wtflag = 1;
 
-    } else if (button < 448) { // 3번 버튼: 노즐 뒤로
+    } else if (button < 448 && !npflag) { // 3번 버튼: 노즐 뒤로
       // 위치가 -1단계 이상일 경우 뒤로 한 칸 이동
       nozzpos > -2 ? nozzpos-- : nozzpos;
       led &= ~(1 << LDa1 | 1 << LDa2 | 1 << LDa3 | 1 << LDa4 | 1 << LDa5);
       led |= (1 << (LDa3 - nozzpos));
       write_LED();
+      npflag = 1;
 
-    } else if (button < 576) { // 4번 버튼: 수압 감소
+    } else if (button < 576 && !wpflag) { // 4번 버튼: 수압 감소
       // 수압이 2단계 이상일 경우 한 단계 감소
       waterpres > 1 ? waterpres-- : waterpres;
       led &= ~(1 << LDa1 | 1 << LDa2 | 1 << LDa3 | 1 << LDa4 | 1 << LDa5);
@@ -93,15 +104,17 @@ int main(void) {
         led |= (1 << LDa5);
       }
       write_LED();
+      wpflag = 1;
 
-    } else if (button < 704) { // 5번 버튼: 노즐 앞으로
+    } else if (button < 704 && !npflag) { // 5번 버튼: 노즐 앞으로
       // 위치가 1단계 이하일 경우 앞으로 한 칸 이동
       nozzpos < 2 ? nozzpos++ : nozzpos;
       led &= ~(1 << LDa1 | 1 << LDa2 | 1 << LDa3 | 1 << LDa4 | 1 << LDa5);
       led |= (1 << (LDa3 - nozzpos));
       write_LED();
+      npflag = 1;
 
-    } else if (button < 832) { // 6번 버튼: 수압 증가
+    } else if (button < 832 && !wpflag) { // 6번 버튼: 수압 증가
       // 수압이 4단계 이하일 경우 한 단계 증가
       waterpres < 5 ? waterpres++ : waterpres;
       led &= ~(1 << LDa1 | 1 << LDa2 | 1 << LDa3 | 1 << LDa4 | 1 << LDa5);
@@ -118,6 +131,7 @@ int main(void) {
         led |= (1 << LDa5);
       }
       write_LED();
+      wpflag = 1;
 
     } else if (button < 960) { // 7번 버튼: 건조
       // 세정 중이 아닐 경우 건조 모드로 변경
@@ -130,10 +144,13 @@ int main(void) {
     } else { // button < 1023 // 8번 버튼: 세정
       // 정지 중이거나 무브 세정 중일 경우 세정 모드로 변경
       UART_printString("\nwashing\n");
-      if (state == ST_IDLE || state == ST_WASH_MOVE)
-        state = ST_WASH;
+      // 서보모터 조절(waterpres)
+      if (state == ST_IDLE)
+        state = ST_WASH, wpflag = 1;
 
-      // 세정 중일 경우 무브 세정 모드로 변경
+      // 세정 중일 경우 무브 세정 모드와 토글
+      if (state == ST_WASH_MOVE)
+        state = ST_WASH;
       else if (state == ST_WASH)
         state = ST_WASH_MOVE;
 
@@ -143,12 +160,23 @@ int main(void) {
     } // end button if-statement
 
     // 버튼을 누르지 않아도 계속 진행해야 할 일들
+    if (wpflag) { // 수압 변화
+      rotate_servo(waterpres);
+      wpflag = 0;
+    }
+    if (npflag) { // 노즐 위치 변화
+      npflag = 0;
+    }
+    if (wtflag) { // 수온 변화
+      wtflag = 0;
+    }
+    if (stflag) { // 변좌 온도 변화
+      stflag = 0;
+    }
     if (state == ST_WASH_MOVE) {
       // 스텝모터 이동(nozzpos 기준으로 앞뒤로)
     }
     if (state == ST_WASH || state == ST_WASH_MOVE) {
-      // 서보모터 조절(waterpres)
-      rotate_servo(waterpres);
       // 스텝모터 조절(nozzpos)
     }
     // TODO: 변좌온도(seattemp), 온수온도(watertemp) 모니터링해 히터 켜기 / 끄기
