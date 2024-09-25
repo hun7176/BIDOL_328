@@ -16,19 +16,19 @@ void UART_Init(void) {
 }
 
 void UART_transmit(unsigned char data) {
-  while (!(UCSR0A & (1 << UDRE0)))
+  while (!(UCSR0A & (1 << UDRE0))) // 송신 준비 완료까지 대기
     ;
   UDR0 = data;
 }
 
 void UART_printString(char *str) {
-  while (*str)
-    UART_transmit(*(str++));
+  while (*str)               // 문자열의 끝(\0) 이전까지
+    UART_transmit(*(str++)); // 한 글자씩 송신
 }
 
 void UART_printInteger(int n) {
   while (n > 0) {
-    UART_transmit((n % 10) + '0');
+    UART_transmit((n % 10) + '0'); // 일의 자리부터 역순으로 송신
     n /= 10;
   }
 }

@@ -6,14 +6,26 @@
 #include <stdio.h>
 #include <util/delay.h>
 
-/* state 이름 정의*/
+/* 상태 상수 */
+// 상수의 저장에 enum을 사용할 수 있지만, 메모리를 사용하는 enum 대신
+// 전처리 단계에서 처리되는 매크로 상수를 사용함
+
+// 무브세정
+#define FRONT 0
+#define BACK 1
+
+// 노즐 위치
+#define NOZZLE_IDLE 0
+#define NOZZLE_WASH 1
+
+/* state 정의*/
 #define ST_IDLE 0       // 정지 상태
 #define ST_POWER_SAVE 1 // 절전 상태
 #define ST_WASH 2       // 세정 상태
 #define ST_WASH_MOVE 3  // 무브세정 상태
 #define ST_DRY 4        // 건조 상태
 
-/* Port/Pin 매크로 */
+/* Port/Pin 정의 */
 // ADC
 #define ADC_SW_PIN 0          // ADC0: ADC 스위치 리더
 #define ADC_SEAT_THM_PIN 3    // ADC3: 변좌 온도 센서
@@ -53,18 +65,13 @@
 #define DC_DDR DDRD             //
 #define DC_PIN 6                //
 
-// 외부 인터럽트 대응 버튼
+// 외부 인터럽트 버튼
 #define SEAT_SENSOR_PORT PORTD // PD2(INT0): 착석 센서
 #define SEAT_SENSOR_DDR DDRD   //
 #define SEAT_SENSOR_PIN 2      //
 #define STOP_BT_PORT PORTD     // PD3(INT1): 정지 버튼
 #define STOP_BT_DDR DDRD       //
 #define STOP_BT_PIN 3          //
-
-// 디버그용 UART
-#define UART_PORT PORTD // PD1: UART Tx
-#define UART_DDR DDRD   //
-#define UART_PIN 1      //
 
 /* LED 시리얼 데이터 비트 번호 */
 #define LDaBASE 0
