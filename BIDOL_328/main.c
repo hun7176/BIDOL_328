@@ -1,7 +1,6 @@
 ﻿#define F_CPU 16000000L
 
 #include "common.h"
-#include <util/delay.h>
 
 volatile uint16_t led = 0;    // 74595로 전송할 LED 데이터
 volatile int state = ST_IDLE; // 현재 상태
@@ -18,6 +17,9 @@ volatile int wpflag = 0;     // 수압 변화 플래그
 volatile int mvoffset = 0;  // 무브세정 위치 오프셋
 volatile int mvdir = FRONT; // 무브세정 이동중인 방향
 
+volatile int wtemp_val = 0; // 수온센서 ADC 입력값
+volatile int stemp_val = 0; // 변좌온도센서 ADC 입력값
+
 #include "ADC.h"
 #include "GPIO.h"
 #include "UART.h"
@@ -25,22 +27,19 @@ volatile int mvdir = FRONT; // 무브세정 이동중인 방향
 #include "motor.h"
 #include "sensor.h"
 #include "temp_control.h"
-// volatile int dcflag = 0; // dc모터 속도 변화 플래그
-// volatile int svflag = 0; // 서보모터 속도 변화 플래그
 
 int main(void) {
-  volatile int button = 0;
+  volatile int button = 0; // 스위치 ADC 입력값
   volatile int prevbt = 0;
-	volatile int temperature_water = 0; //온도센서로 읽어올 변수
-	volatile int temperature_seat = 0; //온도센서로 읽어올 변수
 
-  char adc_print_buffer[5]; //온도값 출력용. int형을 char 4비트 문자로 변경해 여기에 저장
+  char adc_print_buffer[5]; // 온도값 출력용. int형을 char 4비트 문자로 변경해
+                            // 여기에 저장
 
-  GPIO_Init();          // GPIO 초기화
-  ADC_Init(); // ADC0 초기화
-  EXTI_Init();          // 외부 인터럽트 초기화
-  TIMER1_Init();        // 서보모터 PWM 초기화
-  UART_Init();          // 디버그용 UART 초기화
+  GPIO_Init();   // GPIO 초기화
+  ADC_Init();    // ADC0 초기화
+  EXTI_Init();   // 외부 인터럽트 초기화
+  TIMER1_Init(); // 서보모터 PWM 초기화
+  UART_Init();   // 디버그용 UART 초기화
 
   waterpres = 4, nozzpos = 0; // 기본 수압 4단계, 노즐 가운데
 
@@ -51,19 +50,19 @@ int main(void) {
   char buffer[5];
   while (1) {
     prevbt = button;
-    button = read_ADC(ADC_SW_PIN); // 버튼이 연결된 ADC 읽기   
-    temperature_water=read_ADC(ADC_SEAT_THM_PIN);
-    temperature_seat=read_ADC(ADC_WATER_THM_PIN);
+    button = read_ADC(ADC_SW_PIN); // 버튼이 연결된 ADC 읽기
+    temperature_water = read_ADC(ADC_SEAT_THM_PIN);
+    temperature_seat = read_ADC(ADC_WATER_THM_PIN);
 
-    //디버그용
-      //  int_to_string(button,buffer); //그냥 확인용
-      //  UART_printString(buffer);	
-      //  int_to_string(temperature_water,buffer); //그냥 확인용
-      //  UART_printString(buffer);	
-      //  int_to_string(temperature_seat,buffer); //그냥 확인용
-      //  UART_printString(buffer);
-       // UART_printString("\n");				//온도 확인용 끝
-    //디버그용
+    // 디버그용
+    //   int_to_string(button,buffer); //그냥 확인용
+    //   UART_printString(buffer);
+    //   int_to_string(temperature_water,buffer); //그냥 확인용
+    //   UART_printString(buffer);
+    //   int_to_string(temperature_seat,buffer); //그냥 확인용
+    //   UART_printString(buffer);
+    //  UART_printString("\n");				//온도 확인용 끝
+    // 디버그용
 
     // ADC 전압 값에 따라 버튼을 구분해 상태 변경
     if (processing || prevbt > 64 || button < 64) {
@@ -239,14 +238,7 @@ int main(void) {
         rotate_servo(waterpres);
       wpflag = 0;
     }
-    if (wtflag) { // 수온 변화 : 플래그 필요없고 while문 한번 돌때마다 온도제어함수를 한번씩 계속 실행해야함.
-      wtflag = 0;
-    }
-    if (stflag) { // 변좌 온도 변화 :위와 동일.
-      stflag = 0;
-    }
-    if (state == ST_WASH_MOVE) {
-      // 무브세정 움직임: +-22.5도
+    if (state == ST_WASH_MOVE) { // 무브세정 움직임: +-22.5도
 
       // 끝에 도달하면 방향 전환
       if (mvoffset >= 128) {
@@ -265,8 +257,8 @@ int main(void) {
         _delay_us(500);
       }
     }
-    water_temp_control(watertemp, temperature_water);
-    seat_temp_control(seattemp, temperature_seat);
+    water_temp_control();
+    seat_temp_control();
     // TODO: 변좌온도(seattemp), 온수온도(watertemp) 모니터링해 히터 켜기 / 끄기
     // UART_printString(statestr);
     // UART_printInteger(button);
