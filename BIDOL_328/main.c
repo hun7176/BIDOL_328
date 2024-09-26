@@ -1,6 +1,7 @@
 ﻿#define F_CPU 16000000L
 
 #include "common.h"
+#include <util/delay.h>
 
 volatile uint16_t led = 0;    // 74595로 전송할 LED 데이터
 volatile int state = ST_IDLE; // 현재 상태
@@ -36,9 +37,7 @@ int main(void) {
   char adc_print_buffer[5]; //온도값 출력용. int형을 char 4비트 문자로 변경해 여기에 저장
 
   GPIO_Init();          // GPIO 초기화
-  ADC_Init(ADC_SW_PIN); // ADC0 초기화
-  ADC_Init(ADC_SEAT_THM_PIN); //시트온도ADC (핀 26)
-	ADC_Init(ADC_WATER_THM_PIN); //물온도ADC (핀 27)  
+  ADC_Init(); // ADC0 초기화
   EXTI_Init();          // 외부 인터럽트 초기화
   TIMER1_Init();        // 서보모터 PWM 초기화
   UART_Init();          // 디버그용 UART 초기화
@@ -49,12 +48,22 @@ int main(void) {
   led |= (1 << LDa2 | 1 << LDa3 | 1 << LDa4 | 1 << LDa5);
   write_LED();
   // UART_printString("Initialize complete\n");
-
+  char buffer[5];
   while (1) {
     prevbt = button;
-    button = read_ADC(); // 버튼이 연결된 ADC 읽기
-    temperature_water=read_ADC();
-		temperature_seat=read_ADC();
+    button = read_ADC(ADC_SW_PIN); // 버튼이 연결된 ADC 읽기   
+    temperature_water=read_ADC(ADC_SEAT_THM_PIN);
+    temperature_seat=read_ADC(ADC_WATER_THM_PIN);
+
+    //디버그용
+      //  int_to_string(button,buffer); //그냥 확인용
+      //  UART_printString(buffer);	
+      //  int_to_string(temperature_water,buffer); //그냥 확인용
+      //  UART_printString(buffer);	
+      //  int_to_string(temperature_seat,buffer); //그냥 확인용
+      //  UART_printString(buffer);
+       // UART_printString("\n");				//온도 확인용 끝
+    //디버그용
 
     // ADC 전압 값에 따라 버튼을 구분해 상태 변경
     if (processing || prevbt > 64 || button < 64) {
@@ -257,7 +266,7 @@ int main(void) {
       }
     }
     water_temp_control(watertemp, temperature_water);
-    water_temp_control(seattemp, temperature_seat);
+    seat_temp_control(seattemp, temperature_seat);
     // TODO: 변좌온도(seattemp), 온수온도(watertemp) 모니터링해 히터 켜기 / 끄기
     // UART_printString(statestr);
     // UART_printInteger(button);

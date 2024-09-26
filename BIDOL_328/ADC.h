@@ -4,7 +4,7 @@
 #include "common.h"
 
 // ADC 초기화
-void ADC_Init(unsigned char channel) {
+void ADC_Init() {
   // AVCC를 기준 전압으로 설정
   ADMUX |= 0x40;
 
@@ -15,16 +15,20 @@ void ADC_Init(unsigned char channel) {
   // 자동 트리거/프리러닝 모드
   ADCSRA |= (1 << ADATE);
 
-  // 채널 선택
+  
   // TODO: 채널 변경 함수 만들기
-  ADMUX = ((ADMUX & 0xE0) | channel);
 
-  // 변환 시작
-  ADCSRA |= (1 << ADSC);
 }
 
+
 // ADC 값 읽어서 반환
-int read_ADC(void) {
+int read_ADC(unsigned char channel) {
+  // 채널 선택
+  ADMUX = ((ADMUX & 0xE0) | channel);
+  // 변환 시작
+  _delay_us(200);
+  ADCSRA |= (1 << ADSC);
+
   while (!(ADCSRA & (1 << ADIF)))
     ;         // 변환 완료 대기
   return ADC; // 변환 완료시 10비트 값 반환

@@ -137,19 +137,31 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ADC.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="common.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="exinterrupt.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="GPIO.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="servo_pwm.h">
+    <Compile Include="motor.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="sensor.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="temp_control.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="UART.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="water_sensor.h">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>
