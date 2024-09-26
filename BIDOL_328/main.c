@@ -17,10 +17,10 @@ volatile int wpflag = 0;     // 수압 변화 플래그
 volatile int mvoffset = 0;  // 무브세정 위치 오프셋
 volatile int mvdir = FRONT; // 무브세정 이동중인 방향
 
-volatile int button = 0;    // 스위치 ADC 입력값
-volatile int prevbt = 0;    // 스위치 ADC 직전입력값
-volatile int wtemp_val = 0; // 수온센서 ADC 입력값
-volatile int stemp_val = 0; // 변좌온도센서 ADC 입력값
+volatile int button = 0;     // 스위치 ADC 입력값
+volatile int prevbt = 0;     // 스위치 ADC 직전입력값
+volatile int wtemp_val = 0;  // 수온센서 ADC 입력값
+volatile int stemp_val = 0;  // 변좌온도센서 ADC 입력값
 volatile int wlevel_val = 0; // 수위센서 ADC 입력값
 
 #include "ADC.h"
@@ -32,9 +32,6 @@ volatile int wlevel_val = 0; // 수위센서 ADC 입력값
 #include "temp_control.h"
 
 int main(void) {
-
-  char adc_print_buffer[5]; // 온도값 출력용. int형을 char 4비트 문자로 변경해
-                            // 여기에 저장
 
   GPIO_Init();   // GPIO 초기화
   ADC_Init();    // ADC0 초기화
@@ -54,7 +51,7 @@ int main(void) {
     button = read_ADC(ADC_SW_PIN); // 버튼이 연결된 ADC 읽기
     wtemp_val = read_ADC(ADC_SEAT_THM_PIN);
     stemp_val = read_ADC(ADC_WATER_THM_PIN);
-    wlevel_val=read_ADC(ADC_WATER_LEVEL_PIN);
+    wlevel_val = read_ADC(ADC_WATER_LEVEL_PIN);
     // 디버그용
     //   int_to_string(wlevel_val,buffer); //그냥 확인용
     //   UART_printString(buffer);
@@ -259,7 +256,7 @@ int main(void) {
         _delay_us(500);
       }
     }
-    if(wlevel_val>250){
+    if (wlevel_val > 250) {
       water_temp_control();
     }
     seat_temp_control();
