@@ -1,5 +1,5 @@
-#ifndef TIMER_CONTROL_H
-#define TIMER_CONTROL_H
+#ifndef __MOTOR_H__
+#define __MOTOR_H__
 
 #include "common.h"
 
@@ -7,7 +7,7 @@
 #define PULSE_STEP 330
 
 /* **********서보 모터********** */
-// 서보모터 구동을 위한 PWM 타이머
+// 서보모터 구동을 위한 PWM 타이머 초기화
 void TIMER1_Init(void) {
 
   // 고속 PWM 모드로 설정
@@ -27,9 +27,11 @@ void TIMER1_Init(void) {
   DDRB |= (1 << 1);
 }
 
+// 노즐 수압 조절 (0~5)
 void rotate_servo(int input) { OCR1A = PULSE_BASE + PULSE_STEP * input; }
 
 /* **********스텝 모터********** */
+// 노즐 수납/사출
 void nozzle_move(int nozdest) {
   // 노즐을 수납 위치 / 세정 위치로 이동
   // 이미 해당 위치일 경우 아무 것도 하지 않음
@@ -52,6 +54,7 @@ void nozzle_move(int nozdest) {
   }
 }
 
+// 노즐 이동 방향 설정
 void nozzle_setdirection(int dir) {
   if (dir == FRONT) {
     STEPPER_DIR_PORT &= ~(1 << STEPPER_DIR_PIN);

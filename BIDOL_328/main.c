@@ -2,27 +2,12 @@
 
 #include "common.h"
 
-// ADC.h
-void ADC_Init(unsigned char channel); // ADC 초기화
-int read_ADC(void);                   // ADC 값 읽기
-
-// GPIO.h
-void GPIO_Init(void);              // GPIO 초기화
-void EXTI_Init(void);              // 외부 인터럽트 초기화
-void write_LED(void);              // LED 상태 시리얼 전송
-void nozzle_move(int nozdest);     // 노즐 수납/사출
-void nozzle_setdirection(int dir); // 노즐 이동 방향 설정
-
-// main.c
-ISR(INT0_vect); // 일어남
-ISR(INT1_vect); // 정지 버튼 작동
-
 volatile uint16_t led = 0;    // 74595로 전송할 LED 데이터
 volatile int state = ST_IDLE; // 현재 상태
 volatile int watertemp = 0;   // 현재 온수 단계 (0~4)
 volatile int seattemp = 0;    // 현재 변좌 온도 단계 (0~4)
 volatile int waterpres = 0;   // 현재 수압 단계 (1~5)
-volatile int nozzpos = 0; // 현재 노즐 위치 (-2~2), 높은 숫자가 front
+volatile int nozzpos = 0;     // 현재 노즐 위치 (-2(rear)~2(front))
 
 volatile int processing = 0; // 버튼 입력 플래그
 volatile int wtflag = 0;     // 수온 변화 플래그
@@ -49,12 +34,13 @@ int main(void) {
   EXTI_Init();          // 외부 인터럽트 초기화
   TIMER1_Init();        // 서보모터 PWM 초기화
   UART_Init();          // 디버그용 UART 초기화
-  write_LED();          // LED 초기화
 
-  waterpres = 4, nozzpos = 0;
+  waterpres = 4, nozzpos = 0; // 기본 수압 4단계, 노즐 가운데
+
+  // 수압 4단계로 LED 초기화
   led |= (1 << LDa2 | 1 << LDa3 | 1 << LDa4 | 1 << LDa5);
   write_LED();
-  UART_printString("Initialize complete\n");
+  // UART_printString("Initialize complete\n");
 
   while (1) {
     prevbt = button;

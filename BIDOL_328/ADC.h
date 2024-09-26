@@ -3,6 +3,7 @@
 
 #include "common.h"
 
+// ADC 초기화
 void ADC_Init(unsigned char channel) {
   // AVCC를 기준 전압으로 설정
   ADMUX |= 0x40;
@@ -22,6 +23,7 @@ void ADC_Init(unsigned char channel) {
   ADCSRA |= (1 << ADSC);
 }
 
+// ADC 값 읽어서 반환
 int read_ADC(void) {
   while (!(ADCSRA & (1 << ADIF)))
     ;         // 변환 완료 대기

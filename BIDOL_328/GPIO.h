@@ -3,6 +3,7 @@
 
 #include "common.h"
 
+// GPIO 핀 초기화
 void GPIO_Init(void) {
   // 74595 제어용 핀
   SRCK_DDR |= (1 << SRCK_PIN);
@@ -29,6 +30,7 @@ void GPIO_Init(void) {
   DC_PORT &= ~(1 << DC_PIN);
 }
 
+// LED 상태 데이터 시리얼 전송
 void write_LED(void) {
   for (int i = 15; i >= 0; i--) {
     // 시리얼 데이터 비트 단위 추출

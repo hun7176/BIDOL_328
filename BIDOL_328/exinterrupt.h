@@ -3,7 +3,8 @@
 
 #include "common.h"
 
-void EXTI_Init(void) { // 외부 인터럽트 초기화
+// 외부 인터럽트 초기화
+void EXTI_Init(void) {
   STOP_BT_DDR &= ~(1 << STOP_BT_PIN);
   SEAT_SENSOR_DDR &= ~(1 << SEAT_SENSOR_PIN);
   EIMSK |= (1 << INT0 | 1 << INT1);   // INT0, INT1 인터럽트 활성화
@@ -12,7 +13,8 @@ void EXTI_Init(void) { // 외부 인터럽트 초기화
   sei();                              // 전역 인터럽트 허용
 }
 
-ISR(INT0_vect) { // 일어남
+// 일어남 인터럽트
+ISR(INT0_vect) {
   // 노즐 닫기
   rotate_servo(0);
 
@@ -27,7 +29,8 @@ ISR(INT0_vect) { // 일어남
   UART_printString("idle\n");
 }
 
-ISR(INT1_vect) { // 정지 버튼 작동
+// 정지 버튼 인터럽트
+ISR(INT1_vect) {
   // 노즐 닫기
   rotate_servo(0);
 
