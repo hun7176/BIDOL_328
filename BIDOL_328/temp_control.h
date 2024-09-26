@@ -34,9 +34,6 @@ void water_temp_control(void) {
   }
 }
 void seat_temp_control(void) {
-  int_to_string(stemp_val, buffer);
-  UART_printString(buffer);
-  UART_printString("\n");
   if (watertemp == 1) { // 65로 만들기
     if (stemp_val < STEMP1) {
       WATER_HEAT_PORT |= (1 << WATER_HEAT_PIN);
