@@ -56,13 +56,13 @@ int main(void) {
     stemp_val = read_ADC(ADC_WATER_THM_PIN);
     wlevel_val=read_ADC(ADC_WATER_LEVEL_PIN);
     // 디버그용
-       int_to_string(wlevel_val,buffer); //그냥 확인용
-       UART_printString(buffer);
+    //   int_to_string(wlevel_val,buffer); //그냥 확인용
+    //   UART_printString(buffer);
     //   int_to_string(temperature_water,buffer); //그냥 확인용
     //   UART_printString(buffer);
     //   int_to_string(temperature_seat,buffer); //그냥 확인용
     //   UART_printString(buffer);
-      UART_printString("\n");				//온도 확인용 끝
+    //  UART_printString("\n");				//온도 확인용 끝
     // 디버그용
 
     // ADC 전압 값에 따라 버튼을 구분해 상태 변경
@@ -72,7 +72,7 @@ int main(void) {
       // 또는 이미 처리한 버튼
       // 또는 버튼 안 누름
 
-    } else if (button < 192 && !stflag) { // 1번 버튼: 변좌 온도
+    } else if (button < 192 /*&& !stflag*/) { // 1번 버튼: 변좌 온도
       // 변좌 온도를 4단계 안에서 순환
       if (seattemp == 3) { // 3단계일 경우 0단계로 초기화
         seattemp = 0;
@@ -86,9 +86,9 @@ int main(void) {
         led |= (1 << LDc3);
         write_LED();
       }
-      stflag = 1;
+      // stflag = 1;
 
-    } else if (button < 320 && !wtflag) { // 2번 버튼: 온수 온도
+    } else if (button < 320 /*&& !wtflag*/) { // 2번 버튼: 온수 온도
       // 온수 온도를 4단계 안에서 순환
       if (watertemp == 3) { // 3단계일 경우 0단계로 초기화
         watertemp = 0;
@@ -102,7 +102,7 @@ int main(void) {
         led |= (1 << LDb3);
         write_LED();
       }
-      wtflag = 1;
+      // wtflag = 1;
 
     } else if (button < 448) { // 3번 버튼: 노즐 뒤로
       // 위치가 -1단계 이상일 경우 뒤로 한 칸 이동
