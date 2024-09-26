@@ -47,13 +47,4 @@ void write_LED(void) {
   RCK_PORT &= ~(1 << RCK_PIN);
 }
 
-void EXTI_Init(void) { // 외부 인터럽트 초기화
-  STOP_BT_DDR &= ~(1 << STOP_BT_PIN);
-  SEAT_SENSOR_DDR &= ~(1 << SEAT_SENSOR_PIN);
-  EIMSK |= (1 << INT0 | 1 << INT1);   // INT0, INT1 인터럽트 활성화
-  EICRA |= (1 << ISC01 | 1 << ISC00); // 버튼 상태 변화 감지
-  EICRA |= (1 << ISC11 | 1 << ISC10); // 버튼 상태 변화 감지
-  sei();                              // 전역 인터럽트 허용
-}
-
 #endif

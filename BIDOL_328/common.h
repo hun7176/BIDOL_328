@@ -7,23 +7,14 @@
 #include <util/delay.h>
 
 /* 상태 상수 */
-// 상수의 저장에 enum을 사용할 수 있지만, 메모리를 사용하는 enum 대신
-// 전처리 단계에서 처리되는 매크로 상수를 사용함
+// 비데 동작 상태
+enum bidet_state { ST_IDLE, ST_POWER_SAVE, ST_WASH, ST_WASH_MOVE, ST_DRY };
 
-// 무브세정
-#define FRONT 0
-#define BACK 1
+// 노즐 이동 방향
+enum nozzle_dir { FRONT, BACK };
 
 // 노즐 위치
-#define NOZZLE_IDLE 0
-#define NOZZLE_WASH 1
-
-/* state 정의*/
-#define ST_IDLE 0       // 정지 상태
-#define ST_POWER_SAVE 1 // 절전 상태
-#define ST_WASH 2       // 세정 상태
-#define ST_WASH_MOVE 3  // 무브세정 상태
-#define ST_DRY 4        // 건조 상태
+enum nozzle_pos { NOZZLE_IDLE, NOZZLE_WASH };
 
 /* Port/Pin 정의 */
 // ADC
