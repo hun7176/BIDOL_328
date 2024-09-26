@@ -34,10 +34,7 @@ void water_temp_control(void) {
   }
 }
 void seat_temp_control(void) {
-  int_to_string(stemp_val, buffer);
-  UART_printString(buffer);
-  UART_printString("\n");
-  if (watertemp == 1) { // 65로 만들기
+  if (seattemp == 1) { // 65로 만들기
     if (stemp_val < STEMP1) {
       WATER_HEAT_PORT |= (1 << WATER_HEAT_PIN);
       UART_printString("on temp1");
@@ -47,7 +44,7 @@ void seat_temp_control(void) {
       UART_printString("off temp1");
       UART_printString("\n");
     }
-  } else if (watertemp == 2) {
+  } else if (seattemp == 2) {
     if (stemp_val < STEMP2) {
       WATER_HEAT_PORT |= (1 << WATER_HEAT_PIN);
       UART_printString("on temp2");
@@ -58,7 +55,7 @@ void seat_temp_control(void) {
       UART_printString("\n");
     }
 
-  } else if (watertemp == 3) {
+  } else if (seattemp == 3) {
     if (stemp_val < STEMP3) {
       WATER_HEAT_PORT |= (1 << WATER_HEAT_PIN);
       UART_printString("on temp3");
