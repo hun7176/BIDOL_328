@@ -14,17 +14,13 @@ void ADC_Init() {
   ADCSRA |= (1 << ADEN);
   // 자동 트리거/프리러닝 모드
   ADCSRA |= (1 << ADATE);
-
-  
-  // TODO: 채널 변경 함수 만들기
-
 }
 
-
-// ADC 값 읽어서 반환
+// 지정한 채널의 ADC 값 읽어서 반환
 int read_ADC(unsigned char channel) {
   // 채널 선택
   ADMUX = ((ADMUX & 0xE0) | channel);
+
   // 변환 시작
   _delay_us(200);
   ADCSRA |= (1 << ADSC);
