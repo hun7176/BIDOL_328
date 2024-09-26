@@ -33,4 +33,9 @@ void UART_printInteger(int n) {
   }
 }
 
+void int_to_string(int n, char *buffer){
+	sprintf(buffer, "%04d", n);
+	buffer[4]='\0';
+}
+
 #endif /* UART_H_ */

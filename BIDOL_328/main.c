@@ -23,14 +23,22 @@ volatile int mvdir = FRONT; // 무브세정 이동중인 방향
 #include "exinterrupt.h"
 #include "motor.h"
 #include "sensor.h"
+#include "temp_control.h"
 // volatile int dcflag = 0; // dc모터 속도 변화 플래그
 // volatile int svflag = 0; // 서보모터 속도 변화 플래그
 
 int main(void) {
   volatile int button = 0;
   volatile int prevbt = 0;
+	volatile int temperature_water = 0; //온도센서로 읽어올 변수
+	volatile int temperature_seat = 0; //온도센서로 읽어올 변수
+
+  char adc_print_buffer[5]; //온도값 출력용. int형을 char 4비트 문자로 변경해 여기에 저장
+
   GPIO_Init();          // GPIO 초기화
   ADC_Init(ADC_SW_PIN); // ADC0 초기화
+  ADC_Init(ADC_SEAT_THM_PIN); //시트온도ADC (핀 26)
+	ADC_Init(ADC_WATER_THM_PIN); //물온도ADC (핀 27)  
   EXTI_Init();          // 외부 인터럽트 초기화
   TIMER1_Init();        // 서보모터 PWM 초기화
   UART_Init();          // 디버그용 UART 초기화
@@ -45,6 +53,8 @@ int main(void) {
   while (1) {
     prevbt = button;
     button = read_ADC(); // 버튼이 연결된 ADC 읽기
+    temperature_water=read_ADC();
+		temperature_seat=read_ADC();
 
     // ADC 전압 값에 따라 버튼을 구분해 상태 변경
     if (processing || prevbt > 64 || button < 64) {
@@ -220,10 +230,10 @@ int main(void) {
         rotate_servo(waterpres);
       wpflag = 0;
     }
-    if (wtflag) { // 수온 변화
+    if (wtflag) { // 수온 변화 : 플래그 필요없고 while문 한번 돌때마다 온도제어함수를 한번씩 계속 실행해야함.
       wtflag = 0;
     }
-    if (stflag) { // 변좌 온도 변화
+    if (stflag) { // 변좌 온도 변화 :위와 동일.
       stflag = 0;
     }
     if (state == ST_WASH_MOVE) {
@@ -246,6 +256,8 @@ int main(void) {
         _delay_us(500);
       }
     }
+    water_temp_control(watertemp, temperature_water);
+    water_temp_control(seattemp, temperature_seat);
     // TODO: 변좌온도(seattemp), 온수온도(watertemp) 모니터링해 히터 켜기 / 끄기
     // UART_printString(statestr);
     // UART_printInteger(button);
