@@ -9,8 +9,6 @@
 #define STEMP2 70
 #define STEMP3 75
 
-char buffer[5];
-
 void water_temp_control(void) {
   if (watertemp == 1) { // 65로 만들기
     if (wtemp_val < WTEMP1) {

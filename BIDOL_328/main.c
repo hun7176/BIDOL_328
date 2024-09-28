@@ -33,10 +33,14 @@ volatile int wlevel_val = 0; // 수위센서 ADC 입력값
 
 int main(void) {
 
+  /* ******************** */
+  /*   Initialize Phase   */
+  /* ******************** */
+
   GPIO_Init();   // GPIO 초기화
-  ADC_Init();    // ADC0 초기화
+  ADC_Init();    // ADC 초기화
   EXTI_Init();   // 외부 인터럽트 초기화
-  TIMER1_Init(); // 서보모터 PWM 초기화
+  TIMER1_Init(); // 서보모터 PWM 타이머 초기화
   UART_Init();   // 디버그용 UART 초기화
 
   waterpres = 4, nozzpos = 0; // 기본 수압 4단계, 노즐 가운데
@@ -44,62 +48,59 @@ int main(void) {
   // 수압 4단계로 LED 초기화
   led |= (1 << LDa2 | 1 << LDa3 | 1 << LDa4 | 1 << LDa5);
   write_LED();
-  // UART_printString("Initialize complete\n");
-  char buffer[5];
+
+  // end initialize phase
+
   while (1) {
+
+    /* ******************** */
+    /*      Read Phase      */
+    /* ******************** */
+
+    // 이전 버튼 입력 저장
     prevbt = button;
-    button = read_ADC(ADC_SW_PIN); // 버튼이 연결된 ADC 읽기
+
+    // 버튼, 온도, 수위 값 읽어오기
+    button = read_ADC(ADC_SW_PIN);
     wtemp_val = read_ADC(ADC_SEAT_THM_PIN);
     stemp_val = read_ADC(ADC_WATER_THM_PIN);
     wlevel_val = read_ADC(ADC_WATER_LEVEL_PIN);
-    // 디버그용
-    //   int_to_string(wlevel_val,buffer); //그냥 확인용
-    //   UART_printString(buffer);
-    //   int_to_string(temperature_water,buffer); //그냥 확인용
-    //   UART_printString(buffer);
-    //   int_to_string(temperature_seat,buffer); //그냥 확인용
-    //   UART_printString(buffer);
-    //  UART_printString("\n");				//온도 확인용 끝
-    // 디버그용
 
-    // ADC 전압 값에 따라 버튼을 구분해 상태 변경
-
+    // ADC 전압 값에 따라 버튼을 구분해 처리
     if (processing || prevbt > 64 || button < 64) {
       // 이전 입력 처리중
       // 또는 이미 처리한 버튼
       // 또는 버튼 안 누름
 
-    } else if (button < 192 /*&& !stflag*/) { // 1번 버튼: 변좌 온도
+    } else if (button < 192) { // 1번 버튼: 변좌 온도
       // 변좌 온도를 4단계 안에서 순환
       if (seattemp == 3) { // 3단계일 경우 0단계로 초기화
         seattemp = 0;
         led &= ~(1 << LDc1 | 1 << LDc2 | 1 << LDc3);
         write_LED();
 
-      } else { // 한 단계 높이고 LED 추가 점등
+      } else { // 2단계 이하면 한 단계 높이고 LED 추가 점등
         seattemp++;
         led |= ((led & (1 << LDc2)) ? (1 << LDc1) : 0);
         led |= ((led & (1 << LDc3)) ? (1 << LDc2) : 0);
         led |= (1 << LDc3);
         write_LED();
       }
-      // stflag = 1;
 
-    } else if (button < 320 /*&& !wtflag*/) { // 2번 버튼: 온수 온도
+    } else if (button < 320) { // 2번 버튼: 온수 온도
       // 온수 온도를 4단계 안에서 순환
       if (watertemp == 3) { // 3단계일 경우 0단계로 초기화
         watertemp = 0;
         led &= ~(1 << LDb1 | 1 << LDb2 | 1 << LDb3);
         write_LED();
 
-      } else { // 한 단계 높이고 LED 추가 점등
+      } else { // 2단계 이하면 한 단계 높이고 LED 추가 점등
         watertemp++;
         led |= ((led & (1 << LDb2)) ? (1 << LDb1) : 0);
         led |= ((led & (1 << LDb3)) ? (1 << LDb2) : 0);
         led |= (1 << LDb3);
         write_LED();
       }
-      // wtflag = 1;
 
     } else if (button < 448) { // 3번 버튼: 노즐 뒤로
       // 위치가 -1단계 이상일 경우 뒤로 한 칸 이동
@@ -186,9 +187,8 @@ int main(void) {
 
       // 건조 모터 가동
       DC_PORT |= (1 << DC_PIN);
-      // TODO: dry timer start
 
-    } else { // button < 1023 // 8번 버튼: 세정
+    } else { // (button < 1023) // 8번 버튼: 세정
       // 세정 중일 경우 무브 세정 모드와 토글
       if (state == ST_WASH_MOVE) {
         // 무브세정 중 일반세정으로 변경
@@ -224,14 +224,12 @@ int main(void) {
         wpflag = 1;
       }
 
-      // TODO: if idle-> wash timer start
-    } // end button if-statement
+    } // end read phase
 
-    /* *************************************** */
-    /* *************************************** */
-    /* *************************************** */
+    /* ******************** */
+    /*    Execute  Phase    */
+    /* ******************** */
 
-    /* 버튼을 누르지 않아도 계속 진행해야 할 일들 */
     if (wpflag) { // 수압 변동, 세정 모드에서만 적용
       if (state == ST_WASH || state == ST_WASH_MOVE)
         rotate_servo(waterpres);
@@ -260,9 +258,5 @@ int main(void) {
       water_temp_control();
     }
     seat_temp_control();
-    // TODO: 변좌온도(seattemp), 온수온도(watertemp) 모니터링해 히터 켜기 / 끄기
-    // UART_printString(statestr);
-    // UART_printInteger(button);
-    // _delay_ms(1000);
-  } // end while
+  } // end execute phase
 }
