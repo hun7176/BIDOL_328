@@ -22,7 +22,7 @@ int read_ADC(unsigned char channel) {
   ADMUX = ((ADMUX & 0xE0) | channel);
 
   // 변환 시작
-  _delay_us(200);
+  _delay_us(200); // 채널 변경 딜레이 대기
   ADCSRA |= (1 << ADSC);
 
   while (!(ADCSRA & (1 << ADIF)))

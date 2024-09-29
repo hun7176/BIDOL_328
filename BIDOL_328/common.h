@@ -57,27 +57,21 @@ enum nozzle_pos { NOZZLE_IDLE, NOZZLE_WASH };
 #define DC_PIN 6                //
 
 // 외부 인터럽트 버튼
-#define SEAT_SENSOR_PORT PORTD // PD2(INT0): 착석 센서
-#define SEAT_SENSOR_DDR DDRD   //
-#define SEAT_SENSOR_PIN 2      //
-#define STOP_BT_PORT PORTD     // PD3(INT1): 정지 버튼
-#define STOP_BT_DDR DDRD       //
-#define STOP_BT_PIN 3          //
+#define STOP_BT_PORT PORTD // PD3(INT1): 정지 버튼
+#define STOP_BT_DDR DDRD   //
+#define STOP_BT_PIN 3      //
 
 /* LED 시리얼 데이터 비트 번호 */
-#define LDaBASE 0
 #define LDa1 1
 #define LDa2 2
 #define LDa3 3
 #define LDa4 4
 #define LDa5 5
 
-#define LDbBASE 8
 #define LDb1 9
 #define LDb2 10
 #define LDb3 11
 
-#define LDcBASE 11
 #define LDc1 12
 #define LDc2 13
 #define LDc3 14

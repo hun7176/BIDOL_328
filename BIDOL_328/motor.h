@@ -37,6 +37,7 @@ void nozzle_move(int nozdest) {
   // 이미 해당 위치일 경우 아무 것도 하지 않음
   static int nozpos = NOZZLE_IDLE;
 
+  // 방향 설정
   if (nozpos == NOZZLE_IDLE && nozdest == NOZZLE_WASH) {
     nozzle_setdirection(FRONT);
     nozpos = NOZZLE_WASH;
@@ -46,6 +47,7 @@ void nozzle_move(int nozdest) {
   } else
     return;
 
+  // 180도 이동
   for (int i = 0; i < 1024; i++) {
     STEPPER_STEP_PORT |= (1 << STEPPER_STEP_PIN);
     _delay_us(500);

@@ -9,61 +9,72 @@
 #define STEMP2 70
 #define STEMP3 75
 
+// 수온 조절
 void water_temp_control(void) {
-  if (watertemp == 1) { // 65로 만들기
+  if (watertemp == 1) { // 온도 1단계
     if (wtemp_val < WTEMP1) {
       WATER_HEAT_PORT |= (1 << WATER_HEAT_PIN);
     } else {
       WATER_HEAT_PORT &= ~(1 << WATER_HEAT_PIN);
     }
-  } else if (watertemp == 2) {
+
+  } else if (watertemp == 2) { // 온도 2단계
     if (wtemp_val < WTEMP2) {
       WATER_HEAT_PORT |= (1 << WATER_HEAT_PIN);
     } else {
       WATER_HEAT_PORT &= ~(1 << WATER_HEAT_PIN);
     }
 
-  } else if (watertemp == 3) {
+  } else if (watertemp == 3) { // 온도 3단계
     if (wtemp_val < WTEMP3) {
       WATER_HEAT_PORT |= (1 << WATER_HEAT_PIN);
     } else {
       WATER_HEAT_PORT &= ~(1 << WATER_HEAT_PIN);
     }
+
+  } else { // 온도 0단계
+    WATER_HEAT_PORT &= ~(1 << WATER_HEAT_PIN);
   }
 }
+
+// 변좌 온도 조절
 void seat_temp_control(void) {
-  if (seattemp == 1) { // 65로 만들기
+  if (seattemp == 1) { // 온도 1단계
     if (stemp_val < STEMP1) {
-      WATER_HEAT_PORT |= (1 << WATER_HEAT_PIN);
+      SEAT_HEAT_PORT |= (1 << SEAT_HEAT_PIN);
       UART_printString("on temp1");
       UART_printString("\n");
     } else {
-      WATER_HEAT_PORT &= ~(1 << WATER_HEAT_PIN);
+      SEAT_HEAT_PORT &= ~(1 << SEAT_HEAT_PIN);
       UART_printString("off temp1");
       UART_printString("\n");
     }
-  } else if (seattemp == 2) {
+
+  } else if (seattemp == 2) { // 온도 2단계
     if (stemp_val < STEMP2) {
-      WATER_HEAT_PORT |= (1 << WATER_HEAT_PIN);
+      SEAT_HEAT_PORT |= (1 << SEAT_HEAT_PIN);
       UART_printString("on temp2");
       UART_printString("\n");
     } else {
-      WATER_HEAT_PORT &= ~(1 << WATER_HEAT_PIN);
+      SEAT_HEAT_PORT &= ~(1 << SEAT_HEAT_PIN);
       UART_printString("off temp2");
       UART_printString("\n");
     }
 
-  } else if (seattemp == 3) {
+  } else if (seattemp == 3) { // 온도 3단계
     if (stemp_val < STEMP3) {
-      WATER_HEAT_PORT |= (1 << WATER_HEAT_PIN);
+      SEAT_HEAT_PORT |= (1 << SEAT_HEAT_PIN);
       UART_printString("on temp3");
       UART_printString("\n");
     } else {
-      WATER_HEAT_PORT &= ~(1 << WATER_HEAT_PIN);
+      SEAT_HEAT_PORT &= ~(1 << SEAT_HEAT_PIN);
       UART_printString("off temp3");
       UART_printString("\n");
     }
+
+  } else { // 온도 0단계
+    SEAT_HEAT_PORT &= ~(1 << SEAT_HEAT_PIN);
   }
 }
 
-#endif /* WATERTEMP_CONTROL_H_ */
+#endif

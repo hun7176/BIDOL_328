@@ -1,4 +1,4 @@
-﻿#define F_CPU 16000000L
+﻿#define F_CPU 16000000L // MCU 동작 클럭 설정
 
 #include "common.h"
 
@@ -8,11 +8,7 @@ volatile int watertemp = 0;   // 현재 온수 단계 (0~4)
 volatile int seattemp = 0;    // 현재 변좌 온도 단계 (0~4)
 volatile int waterpres = 0;   // 현재 수압 단계 (1~5)
 volatile int nozzpos = 0;     // 현재 노즐 위치 (-2(rear)~2(front))
-
-volatile int processing = 0; // 버튼 입력 플래그
-volatile int wtflag = 0;     // 수온 변화 플래그
-volatile int stflag = 0;     // 변좌 온도 변화 플래그
-volatile int wpflag = 0;     // 수압 변화 플래그
+volatile int wpflag = 0;      // 수압 변화 플래그
 
 volatile int mvoffset = 0;  // 무브세정 위치 오프셋
 volatile int mvdir = FRONT; // 무브세정 이동중인 방향
@@ -28,7 +24,6 @@ volatile int wlevel_val = 0; // 수위센서 ADC 입력값
 #include "UART.h"
 #include "exinterrupt.h"
 #include "motor.h"
-#include "sensor.h"
 #include "temp_control.h"
 
 int main(void) {
@@ -67,9 +62,8 @@ int main(void) {
     wlevel_val = read_ADC(ADC_WATER_LEVEL_PIN);
 
     // ADC 전압 값에 따라 버튼을 구분해 처리
-    if (processing || prevbt > 64 || button < 64) {
-      // 이전 입력 처리중
-      // 또는 이미 처리한 버튼
+    if (prevbt > 64 || button < 64) {
+      // 이미 처리한 버튼
       // 또는 버튼 안 누름
 
     } else if (button < 192) { // 1번 버튼: 변좌 온도
@@ -235,6 +229,7 @@ int main(void) {
         rotate_servo(waterpres);
       wpflag = 0;
     }
+
     if (state == ST_WASH_MOVE) { // 무브세정 움직임: +-22.5도
 
       // 끝에 도달하면 방향 전환
@@ -254,9 +249,11 @@ int main(void) {
         _delay_us(500);
       }
     }
-    if (wlevel_val > 250) {
+
+    if (wlevel_val > 250) // 수위가 일정 이상 일떄만 온수 작동
       water_temp_control();
-    }
-    seat_temp_control();
+
+    seat_temp_control(); // 변좌 온열 작동
+
   } // end execute phase
 }
