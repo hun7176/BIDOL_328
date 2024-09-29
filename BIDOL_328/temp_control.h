@@ -1,5 +1,5 @@
 #ifndef __TEMP_CONTROL_H__
-#define __WATERTEMP_CONTROL_H__
+#define __TEMP_CONTROL_H__
 
 #define WTEMP1 65
 #define WTEMP2 70
