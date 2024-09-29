@@ -9,3 +9,5 @@ Microchip Studio 7.0.2594
 
 #### 사용 MCU
 Atmel ATMega328P
+
+자세한 내용은 보고서 참조 바랍니다.
